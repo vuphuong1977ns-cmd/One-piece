@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+<title>One Piece Adventure</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #071b2d;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+header {
+    background: #a51c30;
+    padding: 12px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#stats {
+    background: #102f48;
+    padding: 10px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#game {
+    width: 100%;
+    max-width: 850px;
+    height: 430px;
+    margin: auto;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+        #58c9ef 0%,
+        #a5e7f7 45%,
+        #1684a9 45%,
+        #08658c 100%
+    );
+    border: 4px solid #e7c46b;
+}
+
+#sun {
+    position: absolute;
+    top: 25px;
+    right: 50px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #ffdf59;
+}
+
+#island {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 135px;
+    background: #dfc27a;
+    border-radius: 45% 45% 0 0;
+}
+
+#grass {
+    position: absolute;
+    bottom: 85px;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: #48a64a;
+    border-radius: 50% 50% 0 0;
+}
+
+#player, .enemy {
+    position: absolute;
+    bottom: 95px;
+    width: 45px;
+    height: 65px;
+    font-size: 42px;
+    line-height: 65px;
+    z-index: 3;
+}
+
+#player {
+    left: 100px;
+    transition: left 0.08s;
+}
+
+.enemy {
+    left: 320px;
+}
+
+#enemyHP {
+    position: absolute;
+    bottom: 160px;
+    left: 300px;
+    font-size: 13px;
+    color: #ff2020;
+    font-weight: bold;
+    z-index: 4;
+}
+
+#quest {
+    padding: 10px;
+    background: #153b53;
+    line-height: 1.6;
+}
+
+button {
+    border: none;
+    padding: 12px 15px;
+    margin: 4px;
+    border-radius: 10px;
+    background: #ffcc45;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(.94);
+}
+
+.controls {
+    padding: 10px;
+    background: #092438;
+}
+
+#message {
+    color: #ffe58a;
+    min-height: 25px;
+    padding: 8px;
+}
+
+#islandName {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    background: #092438bb;
+    padding: 8px;
+    border-radius: 8px;
+    z-index: 5;
+}
+</style>
+</head>
+
+<body>
+
+<header>🏴‍☠️ ONE PIECE ADVENTURE</header>
+
+<div id="stats">
+    <span>⭐ Cấp: <b id="level">1</b></span>
+    <span>❤️ HP: <b id="hp">100</b>/100</span>
+    <span>💰 Beli: <b id="money">0</b></span>
+    <span>✨ EXP: <b id="exp">0</b>/100</span>
+</div>
+
+<div id="game">
+    <div id="sun"></div>
+
+    <div id="islandName">
+        🏝️ <span id="islandText">Đảo Khởi Đầu</span>
+    </div>
+
+    <div id="island"></div>
+    <div id="grass"></div>
+
+    <div id="player">🏴‍☠️</div>
+    <div id="enemy">👊</div>
+    <div id="enemyHP">HP: 50</div>
+</div>
+
+<div id="quest">
+    <b>📜 NHIỆM VỤ TÂN THỦ</b>
+    <div id="questText">
+        Đánh bại 3 tên cướp biển!
+    </div>
+    <div id="message">
+        Chào mừng đến với thế giới hải tặc!
+    </div>
+</div>
+
+<div class="controls">
+    <button onclick="move(-35)">⬅️ Trái</button>
+    <button onclick="move(35)">Phải ➡️</button>
+    <button onclick="attack()">👊 Đánh</button>
+    <button onclick="skill1()">🔥 Chiêu 1</button>
+    <button onclick="skill2()">💥 Chiêu 2</button>
+    <button onclick="skill3()">🌪️ Chiêu 3</button>
+    <br>
+    <button onclick="eatFruit()">🍎 Ăn trái ác quỷ</button>
+    <button onclick="nextIsland()">🚢 Đảo tiếp theo</button>
+    <button onclick="recover()">❤️ Hồi HP</button>
+</div>
+
+<script>
+let level = 1;
+let hp = 100;
+let money = 0;
+let exp = 0;
+
+let playerX = 100;
+let enemyX = 320;
+let enemyHP = 50;
+let defeated = 0;
+let islandIndex = 0;
+
+let hasFruit = false;
+let skillReady = true;
+
+const islands = [
+    "Đảo Khởi Đầu",
+    "Thị Trấn Hải Tặc",
+    "Đảo Hải Quân",
+    "Đảo Chú Hề",
+    "Đảo Usopp",
+    "Tàu Baratie",
+    "Đảo Người Cá"
+];
+
+const player = document.getElementById("player");
+const enemy = document.getElementById("enemy");
+const enemyHPText = document.getElementById("enemyHP");
+
+function message(text) {
+    document.getElementById("message").textContent = text;
+}
+
+function update() {
+    document.getElementById("level").textContent = level;
+    document.getElementById("hp").textContent = hp;
+    document.getElementById("money").textContent = money;
+    document.getElementById("exp").textContent = exp;
+
+    player.style.left = playerX + "px";
+    enemy.style.left = enemyX + "px";
+    enemyHPText.style.left = (enemyX - 20) + "px";
+    enemyHPText.textContent = "HP: " + enemyHP;
+
+    document.getElementById("islandText").textContent =
+        islands[islandIndex];
+
+    document.getElementById("questText").textContent =
+        defeated < 3
+        ? "Đánh bại 3 tên cướp biển! Tiến độ: " + defeated + "/3"
+        : "Hoàn thành! Bạn đã nhận thưởng nhiệm vụ.";
+}
+
+function move(amount) {
+    playerX += amount;
+    playerX = Math.max(0, Math.min(780, playerX));
+    update();
+}
+
+function damageEnemy(damage, name) {
+    if (hp <= 0) {
+        message("Bạn đã bị hạ! Hãy hồi HP.");
+        return;
+    }
+
+    if (Math.abs(playerX - enemyX) > 100) {
+        message("Bạn ở quá xa kẻ địch! Hãy tiến lại gần.");
+        return;
+    }
+
+    enemyHP -= damage;
+    message(name + " gây " + damage + " sát thương!");
+
+    if (enemyHP <= 0) {
+        defeated++;
+        money += 50;
+        exp += 30;
+
+        message("Đánh bại kẻ địch! +50 Beli, +30 EXP.");
+
+        if (defeated === 3) {
+            money += 200;
+            exp += 70;
+            message("🎉 Hoàn thành nhiệm vụ! +200 Beli!");
+        }
+
+        while (exp >= 100) {
+            exp -= 100;
+            level++;
+            hp = 100;
+            message("⭐ LÊN CẤP " + level + "!");
+        }
+
+        enemyHP = 50 + islandIndex * 20 + level * 5;
+        enemyX = 250 + Math.floor(Math.random() * 400);
+    }
+
+    update();
+}
+
+function attack() {
+    damageEnemy(10 + level * 2, "Đòn đánh thường");
+}
+
+function skill1() {
+    if (!hasFruit) {
+        message("Bạn cần ăn trái ác quỷ trước!");
+        return;
+    }
+    damageEnemy(25 + level * 3, "Gomu Gomu no Pistol!");
+}
+
+function skill2() {
+    if (!hasFruit) {
+        message("Bạn chưa có trái ác quỷ!");
+        return;
+    }
+    damageEnemy(35 + level * 4, "Gomu Gomu no Bazooka!");
+}
+
+function skill3() {
+    if (!hasFruit) {
+        message("Bạn chưa có trái ác quỷ!");
+        return;
+    }
+    damageEnemy(50 + level * 5, "Gomu Gomu no Gatling!");
+}
+
+function eatFruit() {
+    if (hasFruit) {
+        message("Bạn đã sở hữu trái Gomu Gomu rồi!");
+        return;
+    }
+
+    if (money < 100) {
+        message("Cần 100 Beli để mua trái ác quỷ!");
+        return;
+    }
+
+    money -= 100;
+    hasFruit = true;
+    message("🍎 Bạn đã ăn trái Gomu Gomu! Mở khóa 3 chiêu!");
+    update();
+}
+
+function nextIsland() {
+    if (islandIndex >= islands.length - 1) {
+        message("Bạn đã khám phá tất cả các đảo!");
+        return;
+    }
+
+    islandIndex++;
+    playerX = 80;
+    enemyX = 350;
+    enemyHP = 50 + islandIndex * 20 + level * 5;
+
+    message("🚢 Đã đến " + islands[islandIndex] + "!");
+
+    update();
+}
+
+function recover() {
+    if (money < 20) {
+        message("Bạn cần 20 Beli để hồi HP!");
+        return;
+    }
+
+    money -= 20;
+    hp = Math.min(100, hp + 40);
+    message("❤️ Đã hồi 40 HP!");
+    update();
+}
+
+// Điều khiển bằng phím máy tính
+document.addEventListener("keydown", function(e) {
+    if (e.key === "ArrowLeft" || e.key === "a") move(-25);
+    if (e.key === "ArrowRight" || e.key === "d") move(25);
+    if (e.key === " ") attack();
+});
+
+// Kẻ địch phản công theo thời gian
+setInterval(function() {
+    if (Math.abs(playerX - enemyX) < 70 && hp > 0) {
+        hp = Math.max(0, hp - 5);
+        message("⚠️ Kẻ địch phản công! -5 HP.");
+        update();
+    }
+}, 2500);
+
+update();
+</script>
+
+</body>
+      </html>
